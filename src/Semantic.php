@@ -4,37 +4,47 @@ namespace Jiny\Html;
 
 class Semantic
 {
-    public function __construct()
+    public function __construct($ctl = null)
     {
-        // echo __CLASS__;
+
     }
 
     public function table($data, $class=null)
     {
-        $tbody = $this->tbody($data);    
-        $thead = $this->thead($data[0]);
+        $tbody = $this->tbody($data, $class);    
+        $thead = $this->thead($data[0], $class);
         
-        if($class) {
-            $body = "<table class='$class'>";
+        if(isset($class['type'])) {
+            $str = "<table class='".$class['type']."'>";
         } else {
-            $body = "<table>";
+            $str = "<table>";
         }
 
-        return $body.$thead.$tbody."</table>";
+        return $str.$thead.$tbody."</table>";
     }
 
-    private function thead($arr)
+    // thead-dark, thead-light
+    public function thead($arr, $class=null)
     {
-        $aa = "<thead><tr>";
+        
+        if (isset($class['thead'])) {
+            $str = "<thead class='".$class['thead']."'>";
+        } else {
+            $str = "<thead>";
+        }
+
+        $str .= "<tr>";
         foreach($arr as $key => $value) {
             if(is_numeric($key)) continue;
-            $aa .= "<td>$key</td>";
+            $str .= "<th>".$key."</th>";
         }
-        $aa .= "</tr></thead>";
-        return $aa;
+        $str .= "</tr>
+        </thead>";
+
+        return $str;
     }
 
-    private function tbody($arr)
+    public function tbody($arr, $class=null)
     {
         $str = "";
         foreach ($arr as $a) {
@@ -51,9 +61,43 @@ class Semantic
     }
 
 
-    public function p($string)
+
+    public function p($str)
     {
-        return "<p>".$string."</p>";
+        return "<p>".$str."</p>";
     }
-    
+
+    public function h1($string)
+    {
+        return "<h1>".$string."</h1>";
+    }
+
+    public function h2($string)
+    {
+        return "<h2>".$string."</h2>";
+    }
+
+    public function h3($string)
+    {
+        return "<h3>".$string."</h3>";
+    }
+
+    public function h4($string)
+    {
+        return "<h4>".$string."</h4>";
+    }
+
+    public function h5($string)
+    {
+        return "<h5>".$string."</h5>";
+    }
+
+    public function h6($string)
+    {
+        return "<h6>".$string."</h6>";
+    }
+
+    /**
+     * 
+     */
 }
