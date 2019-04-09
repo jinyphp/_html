@@ -17,21 +17,10 @@ class Bootstrap extends Semantic
         return "<div class='table-responsive'>".$str."</div>";
     }
     
-    public function tableHover($data, $body=null, $class=null)
+    public function tableHover($data, $class=null)
     {
-        $str = "";
-        if (isset($body['title'])) $str .= $body['title'];
-        if (isset($body['descript'])) $str .= $body['descript'];
-
-        if (isset($body['header'])) $str .= $body['header'];
-        
         $class['type'] = "table table-hover";
-
-        $str .= $this->table($data, $class);
-
-        if (isset($body['footer'])) $str .= $body['footer'];
-        
-        return $str;
+        return $this->table($data, $class);
     }
 
     /**
