@@ -2,7 +2,7 @@
 
 use \Jiny\Html;
 
-class Tag
+class Tags
 {
     public function h1($msg)
     {
