@@ -34,10 +34,16 @@ class Tag
         return "<h6>".$msg."</h6>";
     }
 
-    public function h1($msg)
+    /**
+     * 본문테그
+     */
+    public function p($msg)
     {
-        return "<h1>".$msg."</h1>";
+        return "<p>".$msg."</p>";
     }
+
+
+ 
 
 
 
