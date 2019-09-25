@@ -42,8 +42,28 @@ class Tag
         return "<p>".$msg."</p>";
     }
 
-
+    /**
+     * 문단 구분
+     */
  
+    public function br()
+    {
+        return "<br>";
+    }
+
+    public function hr()
+    {
+        return "<hr>";
+    }
+
+    /**
+     * 앵커 테그
+     */
+
+    public function a($text, $href="#")
+    {
+        return "<a href='$href'>".$text."</a>";
+    }
 
 
 
