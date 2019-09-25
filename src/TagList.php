@@ -1,5 +1,5 @@
 <?php
-use \Jiny\Html;
+namespace Jiny\Html;
 
 class TagList
 {
