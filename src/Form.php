@@ -15,6 +15,21 @@ class Form
         //echo __CLASS__;
     }
 
+
+    public function group($title,$name,$value)
+    {
+        $str = "<div class=\"form-group\">";
+        $str = "<label for=\"$name\">$title</label>";
+        $str = "<input type=\"text\" name='$name' value='".$value."' class=\"form-control\" id=\"$name\">";
+        $str = "</div>";
+
+        return $str;
+    }
+
+
+
+
+
     public function load($filename)
     {
         $f = file_get_contents($filename);
