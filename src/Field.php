@@ -42,16 +42,23 @@ class Field
 
     public function __toString()
     {
-        $str = "";
+        if($this->_type == "text") {
+            $str = "<input";
 
-        if ($this->_type) $str .= " type='".$this->_type."'";
-        if ($this->_name) $str .= " name='".$this->_name."'";
+            if ($this->_type) $str .= " type='".$this->_type."'";
+            if ($this->_name) $str .= " name='".$this->_name."'";
 
-        if ($this->_value) $str .= " vlaue='".$this->_value."'";
-        if ($this->_id) $str .= " id='".$this->_id."'";
-        if ($this->_size) $str .= " size='".$this->_size."'";
+            if ($this->_value) $str .= " value='".$this->_value."'";
+            if ($this->_id) $str .= " id='".$this->_id."'";
+            if ($this->_size) $str .= " size='".$this->_size."'";
 
-        return "<input".$str.">";
+            $str .= ">";
+        } else {
+            $str = "***";
+        }
+        
+
+        return $str;
     }
 
     public function input($name,$id=null,$type=text)
@@ -59,9 +66,9 @@ class Field
         return "<input type='text' name='".$name."'>";
     }
 
-    public function hidden()
+    public function hidden($name)
     {
-
+        return "<input type='hidden' name='".$name."'>";
     }
 
     public function text($args)
