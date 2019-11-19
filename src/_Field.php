@@ -61,15 +61,7 @@ class Field
         return $str;
     }
 
-    public function input($name,$id=null,$type=text)
-    {
-        return "<input type='text' name='".$name."'>";
-    }
 
-    public function hidden($name)
-    {
-        return "<input type='hidden' name='".$name."'>";
-    }
 
     public function text($args)
     {

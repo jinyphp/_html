@@ -4,6 +4,15 @@ namespace Jiny\Html;
 
 class Form
 {
+    public function __construct($attr=null)
+    {
+        if ($attr) {
+            if(isset($attr['name']) && $attr['name']) $this->setName($attr['name']);
+            if(isset($attr['action']) && $attr['action']) $this->setAction($attr['action']);
+            if(isset($attr['method']) && $attr['method']) $this->setMethod($attr['method']);
+        }
+    }
+
     private $name;
     public function setName($name)
     {
@@ -18,7 +27,7 @@ class Form
         return $this;
     }
 
-    private $method;
+    private $method="post";
     public function setMethod($method)
     {
         $this->method = $method;
@@ -39,40 +48,12 @@ class Form
         return $this;
     }
 
-    
-    public $fields;
-    public function setField($key, $obj)
+    private $formBody;
+    public function setFormBody($string)
     {
-        $this->fields[$key] = $obj;
+        $this->formBody = $string;
         return $this;
     }
-
-    public function label($name, $for)
-    {
-        $body = "<label";
-        if($for) $body .= "for=\"idiom\"";
-        $body .= ">";
-        return $body.$name."</label>";
-    }
-
-    private function fields($fields)
-    {
-        $body = "<ul>";
-        foreach ($fields as $key => $obj) {
-            if(is_string($obj)) {
-                $body .= "<li>".$obj."</li>";
-            } else if(is_object($obj)) {
-                if ($obj->title) {
-                    $body .= "<li>".$this->label($obj->title).$obj."</li>";
-                } else {
-                    $body .= "<li>".$obj."</li>";
-                } 
-            }                  
-        }
-        $body .= "</ul>";
-        return $body;
-    }
-
 
     public function __toString()
     {
@@ -83,8 +64,15 @@ class Form
         if ($this->action) $body .= " action='".$this->action."'";
         if ($this->method) $body .= " method='".$this->method."'";
         $body .= ">";
-
-        $body .= $this->fields($this->fields);
+        
+        if ($this->formBody) {
+            // 폼삽입
+            $body .= $this->formBody;
+        } else {
+            // 폼빌드
+            $body .= $this->items();
+        }
+        
         
         $body .= "</form>";
 
@@ -93,38 +81,36 @@ class Form
         return $body;
     }
 
+    //////////-//////////
 
-    public function formGroup($label, $input)
+    public function formJsonBuilder($filename)
     {
-        $body = "<div class=\"form-group\">";
-        $body .= $label;
-        $body .= $input;
-        $body .= "</div>";
-        return $body;
+        $formJson = $this->formJson($filename);
+        $formBody = $this->formJsonParser($formJson);
+
+        $this->formBody = $formBody;
+        return $this;
     }
 
-
-
-
-    
-    
-
-
-    public function __construct()
+    public function formJson($filename)
     {
-        //echo __CLASS__;
+        $formJson = file_get_contents($filename);
+        return json_decode($formJson);
     }
 
-
-    public function group($title,$name,$value)
+    public function formJsonParser($json)
     {
-        $str = "<div class=\"form-group\">";
-        $str = "<label for=\"$name\">$title</label>";
-        $str = "<input type=\"text\" name='$name' value='".$value."' class=\"form-control\" id=\"$name\">";
-        $str = "</div>";
+        $formitem = new \Jiny\Html\FormItem;        
+        $str = "";
+        foreach ($json as $name => $item) {
+            $str .= $formitem->name($name)->formGroup($item);
+        }
 
         return $str;
     }
+
+
+    //////////-//////////
 
 
     public function fieldset($el, $title=null)
@@ -137,23 +123,6 @@ class Form
         }
         
         return "<fieldset>".$str.$el."</fieldset>";
-    }
-
-
-    public function load($filename)
-    {
-        $f = file_get_contents($filename);
-        $f = json_decode($f);
-
-        if($f->name) $this->name = $f->name;
-        if($f->action) $this->action = $f->action;
-        if($f->method) $this->method = $f->method;
-
-        if($f->fields) {
-            foreach($f->fields as $key => $ff) {
-                $this->setField($key, new \Jiny\Html\Field($ff)); 
-            }
-        }       
     }
 
     /**
