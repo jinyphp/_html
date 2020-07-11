@@ -1,0 +1,4 @@
+$color: #ffff;
+div { 
+    color: lighten($color, 20%); 
+}
