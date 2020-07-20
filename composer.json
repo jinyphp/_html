@@ -22,11 +22,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Jiny\\Html\\": "src/"
+            "Jiny\\Html\\": "src/",
+            "Jiny\\Admin\\": "admin/"
         },
         "files": [
             "src/Helpers/Helper.php",
-            "src/Helpers/jiny.php"
+            "src/Helpers/Jiny.php",
+            "src/Helpers/Html.php"
         ]        
    
     }
