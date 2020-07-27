@@ -12,7 +12,7 @@ namespace Jiny\Html;
 class Table
 {
     // 연상배열 여부 체크
-    function isAssoArray($arr)
+    public function isAssoArray($arr)
     {
         return array_keys($arr) !== range(0, count($arr) - 1);
     }
@@ -22,15 +22,42 @@ class Table
     {
         if ($data) { // 데이터 설정
             if($this->isAssoArray($data)) {
-                // 연상배열 데이터               
+                // 연상배열              
             } else {
-                // 일차 데이터
+                // 순서배열
             }
             $this->data = $data;
+            $this->displayfield($data[0]); //출력필드 설정
         }
     }
 
-    // 테이블을 빌드합니다.
+    /**
+     * 테이블 데이터 설정
+     */
+    public function setData($data)
+    {
+        $this->data = $data;
+        $this->displayfield($data[0]); //출력필드 설정
+        return $this;
+    }
+
+    private $_field=[];
+    public function displayfield($arr=[])
+    {
+        if($this->isAssoArray($arr)) {
+            $this->_field = []; // 초기화, 재설정
+            foreach($arr as $key => $value) $this->_field []= $key;
+            //print_r($this->_field);
+        } else {
+            $this->_field = $arr;
+        }
+        return $this;
+    }
+
+    /**
+     * 빌드로직
+     * 실제 html 테이블을 생성합니다.
+     */
     public function build()
     {
         $body = $this->header;
@@ -42,7 +69,7 @@ class Table
         $body .= ">";
 
         // 테이블 Header를 설정합니다
-        if(!$this->thead) $this->setThead( array_keys($this->data[0]) ); // 첫번째줄, 키값만 전달.
+        if(!$this->thead) $this->buildThead( $this->data[0] ); // 첫번째줄, 키값만 전달.
         $body .= $this->thead;
 
         $body .= $this->caption;
@@ -81,7 +108,9 @@ class Table
         return $this;
     }
 
-    // 테이블 Body
+    /**
+     * 테이블 body를 생성합니다.
+     */
     private $tbody;
     public function setTbody($rows)
     {
@@ -101,25 +130,13 @@ class Table
     {
         $str = "<tr>"; // 행시작 테그
         
+        // 배열처리: 여러개의 셀이 존재합니다.
         if (is_array($arr)) {
-            // 배열처리: 여러개의 셀이 존재합니다.
-            foreach ($arr as $key => $cell) {
-                if (array_key_exists($key, $this->href)) {
-                    if (is_array($this->href[$key])) {
-                        $value = $arr[ $this->href[$key]['field'] ]; // 지정한 키값
-                        $uri = $this->link($key, $value, $this->href[$key]['url']);
-                    } else {
-                        $value = $arr[ $this->href[$key] ]; // 지정한 키값
-                        $uri = $this->link($key, $value);
-                    }                    
-                } else {
-                    $uri = null;          
-                }
-
-                $str .= $this->td($cell, $uri);                
-            }
-        } else {
-            // 단일값 : 한개의 셀만 존재합니다.
+            $str .= $this->trAssoc($arr); // 순차배열
+            
+        } else 
+        // 문자열일때, 한개의 셀만 존재합니다.
+        if(\is_string($arr)) {
             $str .= $this->td($arr);  
         }
         
@@ -127,37 +144,81 @@ class Table
         return $str;
     }
 
-    // td: 열
-    private function td($value, $link=null)
+    private function trAssoc($arr)
     {
-        if ($link) {
+        $str = "";
+        foreach ($arr as $key => $cell) {
+            if (!in_array($key, $this->_field)) continue; // t선택한 필드만 출력허용
+
+            // a링크 설정검사
+            if (array_key_exists($key, $this->href)) {
+                $uri = $this->uri($key, $arr);  
+            } else {
+                $uri = null; // 링크설정 없음        
+            }
+            
+            $str .= $this->td($cell, $uri);                
+        }
+        return $str;
+    }
+
+    private function uri($key, $arr)
+    {
+        $href = $this->href[$key]; //링크값
+        if (\is_string($href)) {
+            // 경로처리
+            if($href[0] == "/") $uri = $href; // 절대경로
+            else $uri = rtrim($_SERVER['REQUEST_URI'],"/")."/".$href; // 상대경로
+
+            //변수치환
+            $str = \explode("{",$uri);
+            foreach($str as $v) {
+                if(strrev($v)[0] == '}') {
+                    $sel = rtrim($v,"}");
+                    $uri = str_replace("{".$v,$arr[$sel],$uri);
+                }
+            }
+            return $uri;
+
+        } else if (\is_array($href)) {
+            if($href[0] == 'script') {
+                $uri = $href[1];
+                // echo $uri;
+                
+                //변수치환
+                $str = \explode("{",$uri);
+                    // print_r($str);
+                foreach($str as $v) {
+                    if(($pos=strpos($v,"}")) === false ) {
+                    } else {
+                        $k = substr($v,0,$pos);
+                        $uri = str_replace("{".$k."}",$arr[$k],$uri);
+                        //echo "===".$uri;
+                    }
+                    /*
+                    if(strrev($v)[0] == '}') {
+                        $sel = rtrim($v,"}");
+                        echo $sel;
+                        $uri = str_replace("{".$v,$arr[$sel],$uri);
+                    }*/
+                }
+                return $uri;
+            }
+        }
+    }
+
+    // td: 열
+    private function td($value, $href=null)
+    {
+        if ($href) {
             // 링크연결이 있는 셀.
-            return "<td><a href='".$link."'>".$value."</a></td>";
+            return "<td><a href='".$href."'>".$value."</a></td>";
         } else {
             return "<td>".$value."</td>"; 
         }        
     }
 
-    // 셀링크 체크
-    private function link($key, $value=null, $url=null)
-    {
-        if (array_key_exists($key, $this->href)) {
-            
-            if ($url) {
-                $uri = $url;
-            } else {
-                $uri = "/". explode("/",$_SERVER['REQUEST_URI'])[1];
-            }            
-            
-            if ($value) {
-                $uri .= "/".$value;
-            }
-            
-        } else {
-            $uri = null;          
-        }
-        return $uri;
-    }
+
 
     // 링크설정
     private $href=[];
@@ -169,9 +230,15 @@ class Table
 
 
     // 테이블 해더
-
     private $thead;
-    public function setThead($arr)
+    private $_theadTitle=[];
+    public function theadTitle($arr)
+    {
+        $this->_theadTitle = $arr;
+        return $this;
+    }
+
+    public function buildThead($arr)
     {
         $this->thead = "<thead>";
         $this->thead .= $this->th($arr);
@@ -183,8 +250,13 @@ class Table
     private function th($arr)
     {
         $str = "<tr>";
-        foreach ($arr as $cell) {
-            $str .= "<th>".$cell."</th>";
+        foreach ($arr as $key => $value) {
+            if (!in_array($key, $this->_field)) continue; // t선택한 필드만 출력허용
+            if(isset($this->_theadTitle[$key])) {
+                $str .= "<th>".$this->_theadTitle[$key]."</th>";
+            } else {
+                $str .= "<th>".$key."</th>";
+            }            
         }
         $str .= "</tr>";
         return $str;

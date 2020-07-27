@@ -10,6 +10,29 @@ class Form
     private $header;
     private $footer;
 
+    private $fields=[];
+
+    /**
+     * 싱글턴
+     */
+    public static $_instance;
+
+    public static function instance($args=null)
+    {
+        if (!isset(self::$_instance)) {        
+            //echo "객체생성\n";
+            // print_r($args);   
+            self::$_instance = new self($args); // 인스턴스 생성
+            if (method_exists(self::$_instance,"init")) {
+                self::$_instance->init();
+            }
+            return self::$_instance;
+        } else {
+            //echo "객체공유\n";
+            return self::$_instance; // 인스턴스가 중복
+        }
+    }
+
     // 폼이름 설정
     public function setName($name)
     {
@@ -43,10 +66,8 @@ class Form
         return $this;
     }
 
-    
-    
     // 폼 빌드
-    public function build()
+    public function build($args=[])
     {
         if(isset($this->header)) $body = $this->header;
 
@@ -56,11 +77,15 @@ class Form
         if ($this->method) $body .= " method='".$this->method."'";
         $body .= ">";
 
-        if (\jiny\arr\isAssoc($this->fields)) {
-            $body .= $this->make_ul($this->fields);
+        if(!empty($args)) {
+            foreach ($args as $value) {
+                $body .= $this->input($value['type'], $value, true);
+            }
         } else {
-            $body .= $this->make($this->fields);
-        }
+            foreach ($this->fields as $key => $value) {
+                $body .= $value;
+            }
+        }       
         
         $body .= "</form>";
 
@@ -69,208 +94,258 @@ class Form
         return $body;
     }
 
+    public function setFields($args=[])
+    {
+        //print_r($args);
+        foreach ($args as $value) {
+            $this->input($value['type'], $value);
+        }
+        return $this;
+    }
+
+    /*
+    private function elBuild()
+    {
+        $body .= "<ul>";
+        foreach ($this->fields as $key => $value) {
+            $body .= "<li>".$value."</li>";
+        }
+        $body .= "</ul>";
+    }
+    */
+
+
     public function __toString()
     {
         return $this->build();
     }
 
-
-    private function make($fields)
+    public function label($title, $for=null)
     {
-        foreach ($fields as $key => $obj) {
-            $body .= $obj;               
-        }
-        return $body;
-    }
-
-    private function make_ul($fields)
-    {
-        $body = "<ul>";
-        foreach ($fields as $key => $obj) {
-            if(is_string($obj)) {
-                $body .= "<li>".$obj."</li>";
-            }                 
-        }
-        $body .= "</ul>";
-        return $body;
-    }
-
-
-    public $fields;
-    public function setField($args)
-    {
-        if(is_string($args)) {
-            $this->fields []= $args;
+        if ($for) {
+            return "<label for='".$for."'>".$title."</label>";
         } else {
-            foreach($args as $key => $value)
-            {
-                $this->fields[$key] = $value;
-            }
-        }
-        return $this;
+            return "<label>".$title."</label>";
+        }        
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * 폼 구성요소
-     */
-    private function itemTemplate($args, $template=null)
-    {
-        // 실행 스크립트의 상위 경로
-        $path = dirname(getcwd()).DIRECTORY_SEPARATOR."resource".DIRECTORY_SEPARATOR.$template; 
-        return \jiny\template($path, $args);
-    }
-
-    public function submit($args, $template=null)
-    {
-        if($template) {
-            // 템플릿 응용
-            return $this->itemTemplate($args, $template=null);
-            
-        } else {
-            extract($args);
-            // 서브밋
-            $code = "<input type='submit'";
-            if(isset($class)) $code .= " class='".$class."'";
-            if(isset($id)) $code .= " id='".$id."'";
-            if(isset($value)) $code .= " value='".$value."'";
-            $code .= "/>";
-        }
-
-        return $code;
-    }
-
-    public function button($args, $template=null)
-    {
-        if($template) {
-            // 템플릿 응용
-            // 템플릿 응용
-            return $this->itemTemplate($args, $template=null);
-            
-        } else {
-            extract($args);
-            // 버튼빌드
-            $code = "<button type='button'";
-            foreach ($args as $key => $value) {
-                if($key == "value") continue;
-                $code .= " $key='".$value."'";
-            }
-            /*
-            if(isset($name)) $code .= " name='".$name."'";
-            if(isset($class)) $code .= " class='".$class."'";
-            if(isset($id)) $code .= " id='".$id."'";
-            */
-            $code .= ">";
-
-            if(isset($args['value'])) $code .= $args['value'];
-
-            $code .= "</button>";
-        }
-
-        return $code;
-    }
-
-    public function hidden($args, $template=null)
-    {
-        if($template) {
-            // 템플릿 응용
-            // 템플릿 응용
-            return $this->itemTemplate($args, $template=null);
-            
-        } else {
-            extract($args);
-            // hidden
-            $code = "<input type='hidden'";
-            if(isset($name)) $code .= " name='".$name."'";
-            if(isset($id)) $code .= " id='".$id."'";
-            if(isset($value)) $code .= " value='".$value."'";
-            $code .= "/>";
-        }
-
-        return $code;
-    }
-
-
-    /**
-     * postdata
-     */
-
-    public function mode()
-    {
-        if(isset($_POST['mode'])) return $_POST['mode'];
-    }
-
-    public function id()
-    {
-        if(isset($_POST['id'])) return intval($_POST['id']);
-    }
-
-    public function data()
-    {
-        if(isset($_POST['postdata'])) return intval($_POST['postdata']);
-    }
-
-
-
-
-    /**
-     * 
-     */
-
-    public function label($name, $for)
-    {
-        $body = "<label";
-        if($for) $body .= "for=\"idiom\"";
-        $body .= ">";
-        return $body.$name."</label>";
-    }
-
-
-  
-
-
-    public function formGroup($label, $input)
-    {
-        $body = "<div class=\"form-group\">";
-        $body .= $label;
-        $body .= $input;
-        $body .= "</div>";
-        return $body;
-    }
-
-    public function group($title,$name,$value)
-    {
-        $str = "<div class=\"form-group\">";
-        $str = "<label for=\"$name\">$title</label>";
-        $str = "<input type=\"text\" name='$name' value='".$value."' class=\"form-control\" id=\"$name\">";
-        $str = "</div>";
-
-        return $str;
-    }
-
 
     public function fieldset($el, $title=null)
     {
         if ($title) {
-            $str = "<legend>".$title."</legend>";
-        }         
-        else {
-            $str = "";
-        }
-        
-        return "<fieldset>".$str.$el."</fieldset>";
+            return "<fieldset>"."<legend>".$title."</legend>".$el."</fieldset>";
+        } else {
+            return "<fieldset>".$el."</fieldset>";
+        }       
     }
+
+    private function attribute($args)
+    {
+        $code = "";
+        foreach ($args as $key => $value) {
+            if (empty($value)) {
+                $code .= " ".$key; 
+            } else {
+                $code .= " ".$key."='".$value."'";
+            }            
+        }
+        return $code;
+    }
+
+    public function input($type, $args, $code=false) :string
+    {
+        if (isset($args['label'])) {
+            $label = $this->label($args['label'], $args['id']);
+            unset($args['label']);
+        } else {
+            $label = "";
+        }
+
+        // hidden
+        $code = "<input ";
+        $args['type'] = $type;
+        $code .= $this->attribute($args);
+        $code .= "/>";
+
+        if (isset($args['name'])) {
+            $key = $args['name'];
+            $this->fields[$key] = $label.$code;
+        } else {
+            $this->fields []= $label.$code;
+        }
+
+        if ($code) {
+            return $label.$code;
+        } else {
+            return $this;
+        }        
+    }
+
+    public function hidden($args, $code=false) 
+    {
+        return $this->input("hidden", $args);
+    }
+
+    public function text($args, $code=false) 
+    {
+        return $this->input("text", $args);
+    }
+
+    public function password($args, $code=false) 
+    {
+        return $this->input("password", $args);
+    }
+
+    public function submit($args, $code=false) 
+    {
+        return $this->input("submit", $args);
+    }
+
+    public function reset($args, $code=false) 
+    {
+        return $this->input("reset", $args);
+    }
+
+    public function image($args, $code=false) 
+    {
+        return $this->input("image", $args);
+    }
+
+    public function button($args, $code=false) 
+    {
+        return $this->input("button", $args);
+    }
+
+    public function checkbox($args, $code=false)
+    {
+        return $this->input("checkbox", $args);
+    }
+
+    public function radio($args, $code=false)
+    {
+        $body = "";
+        foreach ($args as $radio) {
+            $body .= $this->input("radio", $args, true);
+        }
+        $this->fields []= $body;
+        return $body;
+    }
+
+    public function select($args, $code=false)
+    {
+
+    }
+
+    public function textarea($args, $code=false)
+    {
+
+    }
+
+    /**
+     * output 테그 : 계산결과 출력형식
+     */
+    public function output($args, $code=false)
+    {
+
+    }
+
+    public function progress($args, $code=false)
+    {
+
+    }
+
+    public function meter($args, $code=false)
+    {
+
+    }
+
+
+    /**
+     * text 타입 html5 속성
+     */
+    public function color($args, $code=false) 
+    {
+        return $this->input("color", $args);
+    }
+
+    public function date($args, $code=false) 
+    {
+        return $this->input("date", $args);
+    }
+
+    public function datetime($args, $code=false)
+    {
+        return $this->input("datetime", $args);
+    }
+
+    public function datetimeLocal($args, $code=false)
+    {
+        return $this->input("datetime-local", $args);
+    }
+
+    /**
+     * html5
+     */
+    public function email($args, $code=false)
+    {
+        return $this->input("email", $args);
+    }
+
+    public function month($args, $code=false)
+    {
+        return $this->input("month", $args);
+    }
+
+    /**
+     * html
+     */
+    public function number($args, $code=false)
+    {
+        return $this->input("number", $args);
+    }
+
+    /**
+     * html5
+     */
+    public function range($args, $code=false)
+    {
+        return $this->input("range", $args);
+    }
+
+    /**
+     * html5
+     */
+    public function search($args, $code=false)
+    {
+        return $this->input("search", $args);
+    }
+
+    /**
+     * html5
+     */
+    public function tel($args, $code=false)
+    {
+        return $this->input("tel", $args);
+    }
+
+    public function time($args, $code=false)
+    {
+        return $this->input("time", $args);
+    }
+
+    /**
+     * html5
+     */
+    public function url($args, $code=false)
+    {
+        return $this->input("url", $args);
+    }
+
+    public function week($args, $code=false)
+    {
+        return $this->input("week", $args);
+    }
+
+
 
     /**
      * 

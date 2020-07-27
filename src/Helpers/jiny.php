@@ -18,6 +18,23 @@ if (! function_exists('htmlMarkup')) {
     }
 }
 
+function htmlForm($set=[])
+{
+    $obj = \Jiny\Html\Form::instance();
+    foreach ($set as $key => $value) {
+        $method = "set".ucfirst($key);
+        if (\method_exists($obj,$method)) {
+            $obj->$method($value);
+        }        
+    }
+    return $obj;
+}
+
+function htmlFormBody()
+{
+    return htmlForm()->build();
+}
+
 /**
  * css/scss
  */

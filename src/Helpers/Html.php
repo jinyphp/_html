@@ -8,4 +8,29 @@
  * file that was distributed with this source code.
  */
 
-namespace jiny;
+namespace jiny\html;
+
+// csrf 해쉬키 생성
+if (!function_exists("csrf")) {
+    function csrf($salt, $algo="sha1")
+    {
+        $csrf = \hash($algo,$salt.date("Y-m-d H:i:s"));
+        $_SESSION['_csrf'] = $csrf;
+        return $csrf;
+    }
+}
+
+// csrf 해쉬키 생성
+if (!function_exists("isCsrf")) {
+    function isCsrf()
+    {
+        if(isset($_SESSION)) { // session_start 여부 확인
+            if(isset($_POST['csrf']) && $_SESSION['_csrf'] == $_POST['csrf']) {
+                $_SESSION['_csrf'] = null;
+                return true;
+            }
+        }
+        $_SESSION['_csrf'] = null;
+        return false;        
+    }
+}
