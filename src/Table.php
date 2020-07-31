@@ -17,7 +17,7 @@ class Table
         return array_keys($arr) !== range(0, count($arr) - 1);
     }
 
-    private $data;
+    private $data=[];
     public function __construct($data=null)
     {
         if ($data) { // 데이터 설정
@@ -28,6 +28,27 @@ class Table
             }
             $this->data = $data;
             $this->displayfield($data[0]); //출력필드 설정
+        }
+    }
+
+    /**
+     * 싱글턴
+     */
+    public static $_instance;
+
+    public static function instance($args=null)
+    {
+        if (!isset(self::$_instance)) {        
+            //echo "객체생성\n";
+            // print_r($args);   
+            self::$_instance = new self($args); // 인스턴스 생성
+            if (method_exists(self::$_instance,"init")) {
+                self::$_instance->init();
+            }
+            return self::$_instance;
+        } else {
+            //echo "객체공유\n";
+            return self::$_instance; // 인스턴스가 중복
         }
     }
 
@@ -54,22 +75,42 @@ class Table
         return $this;
     }
 
+    public function tagStart($attr=[])
+    {
+        $body = "<table";
+        if (empty($attr)) {
+            // 테이블 코드 시작, class / id를 추가합니다.
+            if($this->class) $body .= " class=\"".$this->class."\"";
+            if($this->id) $body .= " class=\"".$this->id."\"";
+            
+        } else {
+            foreach ($attr as $key => $value) {
+                $body .= " ".$key."=\"".$value."\"";
+            }
+        }
+        $body .= ">";
+        return $body;
+    }
+
     /**
      * 빌드로직
      * 실제 html 테이블을 생성합니다.
      */
-    public function build()
+    public function build($attr=[])
     {
         $body = $this->header;
-
-        // 테이블 코드 시작, class / id를 추가합니다.
-        $body .= "<table";
-        if($this->class) $body .= " class=\"".$this->class."\"";
-        if($this->id) $body .= " class=\"".$this->id."\"";
-        $body .= ">";
+        $body .= $this->tagStart($attr); // table 시작테크 생성
 
         // 테이블 Header를 설정합니다
-        if(!$this->thead) $this->buildThead( $this->data[0] ); // 첫번째줄, 키값만 전달.
+        if(!$this->thead) {
+            // print_r($this->_theadTitle);
+            if (isset($this->data[0])) {
+                $fieldTitle = $this->data[0];
+            } else {
+                $fieldTitle = $this->_theadTitle;
+            }               
+            $this->buildThead( $fieldTitle ); // 첫번째줄, 키값만 전달.
+        }
         $body .= $this->thead;
 
         $body .= $this->caption;
@@ -114,6 +155,7 @@ class Table
     private $tbody;
     public function setTbody($rows)
     {
+        
         $this->tbody = "<tbody>";
 
         foreach ($rows as $arr) {

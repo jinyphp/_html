@@ -21,6 +21,13 @@ setter 메소드를 이용한 설정
 $Html->setData($data);
 ```
 
+### 헬퍼함수를 통한 객체 생성과 데이터 설정
+`new` 키워드를 통하지 않고 싱클턴 타입의 객체 생성 헬퍼함수를 제공합니다.
+
+```php
+$html = \jiny\html\table($rows);
+```
+
 ## 테이블 출력하기
 데이터값, 설정값에 따라서 테이블을 생성합니다.
 
@@ -31,6 +38,18 @@ echo $Html->build();
 
 ```php
 echo $Html;
+```
+
+### view에서 출력코드 삽입하기
+table 클래스의 메서드를 싱글턴 방식으로 컨트롤러 안에서 생성, 설정을 미리 하였다면,
+html 문서내에서 빌더헬프 함수를 호출하여 테이블을 출력할 수 있습니다.
+
+```html
+<div>
+    <!--리스트목록/Table Builder 헬퍼함수-->
+    <!--매개변수로, 부트스트랩 클래스 타입 전달-->
+    <?= \jiny\html\table\build(['class'=>"table table-hover"]); ?>
+</div>
 ```
 
 ## 출력필드 설정
@@ -71,3 +90,11 @@ $Html->setHref("email", "/members/{id}");
 
 변동되는 동적값은 중괄고`{}`를 이용하여 배열의 키값을 선택하면, 선택된 열의 값으로 대체 됩니다.
 
+
+## 클래스 및 id 설정하기
+
+build 메소드를 이용하여 테이브를 생성할때 속성배열을 인자값으로 전달합니다.
+
+```php
+$table->build(['class'=>"table table-hover"]);
+```

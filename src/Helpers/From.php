@@ -8,4 +8,3 @@
  * file that was distributed with this source code.
  */
 
-namespace jiny\html\from;

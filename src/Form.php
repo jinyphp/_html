@@ -6,7 +6,7 @@ class Form
 {
     private $name;
     private $action;
-    private $method;
+    private $method = "POST";
     private $header;
     private $footer;
 
@@ -66,31 +66,36 @@ class Form
         return $this;
     }
 
-    // 폼 빌드
-    public function build($args=[])
+    public function start()
     {
-        if(isset($this->header)) $body = $this->header;
-
         $body = "<form";
         if ($this->name) $body .= " name='".$this->name."'";
         if ($this->action) $body .= " action='".$this->action."'";
         if ($this->method) $body .= " method='".$this->method."'";
         $body .= ">";
 
-        if(!empty($args)) {
-            foreach ($args as $value) {
-                $body .= $this->input($value['type'], $value, true);
-            }
-        } else {
-            foreach ($this->fields as $key => $value) {
-                $body .= $value;
-            }
+        return $body;
+    }
+
+    public function end()
+    {
+        return "</form>";
+    }
+
+    // 폼 빌드
+    public function build()
+    {
+        if(isset($this->header)) $body = $this->header;
+
+        $body = $this->start();
+
+        foreach ($this->fields as $key => $value) {
+            $body .= $value;
         }       
         
         $body .= "</form>";
 
         if(isset($this->footer)) $body .= $this->footer;
-
         return $body;
     }
 
@@ -141,36 +146,49 @@ class Form
     private function attribute($args)
     {
         $code = "";
+        $hidden = false;
         foreach ($args as $key => $value) {
+            if($key == "type" && $value == "hidden") $hidden = true;
             if (empty($value)) {
+                // 단일속성, 키값만 지정함
                 $code .= " ".$key; 
             } else {
-                $code .= " ".$key."='".$value."'";
+                if(!$hidden && $key == "name") {
+                    $code .= " ".$key."='data[".$value."]'";
+                } else {
+                    $code .= " ".$key."='".$value."'";
+                }                
             }            
         }
         return $code;
     }
 
+    /**
+     * input 요소생성
+     */
     public function input($type, $args, $code=false) :string
     {
+        // 라벨 생성
         if (isset($args['label'])) {
+            if (!isset($args['id'])) $args['id'] = "label-".$args['name']; // 강제 id생성
             $label = $this->label($args['label'], $args['id']);
             unset($args['label']);
         } else {
             $label = "";
         }
 
-        // hidden
+        // 요소 생성
         $code = "<input ";
         $args['type'] = $type;
-        $code .= $this->attribute($args);
+        $args = array_reverse($args);
+        $code .= $this->attribute($args); // 요소루프
         $code .= "/>";
 
         if (isset($args['name'])) {
             $key = $args['name'];
-            $this->fields[$key] = $label.$code;
+            $this->fields[$key] = "<div>".$label.$code."</div>";
         } else {
-            $this->fields []= $label.$code;
+            $this->fields []= "<div>".$label.$code."</div>";
         }
 
         if ($code) {

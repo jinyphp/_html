@@ -34,3 +34,65 @@ if (!function_exists("isCsrf")) {
         return false;        
     }
 }
+
+
+
+function form($body=null, $vars=[]) 
+{
+    return \Jiny\Html\Form::instance();
+}
+
+function table($data=null)
+{
+    $obj = \Jiny\Html\Table::instance();
+    if ($data) $obj->setData($data);
+    return $obj;
+}
+
+if (! function_exists('bootstrap')) {
+    function bootstrap()
+    {
+        return \Jiny\Html\Bootstrap::instance();
+    }
+}
+
+//////////////////
+
+namespace jiny\html\from;
+
+// 폼 시작요소
+function start()
+{
+    echo \jiny\html\form()->start();
+}
+
+// 폼 종료요소
+function end()
+{
+    echo "</form>";
+}
+
+function hidden($attr=[])
+{
+    $str = "<input type='hidden' ";
+    $str .= ">";
+}
+
+/**
+ * 
+ */
+namespace jiny\html\Table;
+
+function build($attr=[])
+{
+    echo \jiny\html\table()->build($attr);
+}
+
+/**
+ * 
+ */
+namespace jiny\html\form;
+function build($attr=[])
+{
+    echo \jiny\html\form()->build($attr);
+}

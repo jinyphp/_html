@@ -10,7 +10,7 @@
 
 namespace jiny;
 
-
+/*
 if (! function_exists('htmlMarkup')) {
     function htmlMarkup()
     {
@@ -34,6 +34,7 @@ function htmlFormBody()
 {
     return htmlForm()->build();
 }
+*/
 
 /**
  * css/scss
@@ -66,7 +67,7 @@ if (! function_exists('css')) {
     }
 }
 
-if (!function_exists(" css_get_contents")) {
+if (!function_exists("css_get_contents")) {
     function css_get_contents($file, $vars=[]) :string
     {
         if(\file_exists($file)) {
@@ -103,7 +104,33 @@ if (!function_exists("scss_get_contents")) {
     }
 }
 
+
+
 function tagBr()
 {
     return "</br>";
 }
+
+
+function javascript($code)
+{
+    return "<script>".$code."</script>";
+}
+
+namespace jiny\html;
+
+function ul($arr,$title=false)
+{
+    $str = "<ul>";
+    foreach ($arr as $key => $value) {
+        if ($title) {
+            $str .= "<li>"."<label>".$key."</label><span>".$value."</span></li>";
+        } else {
+            $str .= "<li>".$value."</li>";
+        }        
+    }
+    $str .= "</ul>";
+    return $str;
+}
+
+require "Bootstrap.php";
