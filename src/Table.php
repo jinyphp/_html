@@ -180,38 +180,45 @@ class Table
         // 배열처리: 여러개의 셀이 존재합니다.
         if (is_array($arr)) {
             $str .= $this->trAssoc($arr); // 순차배열
-            
         } else 
         // 문자열일때, 한개의 셀만 존재합니다.
         if(\is_string($arr)) {
-            $str .= "<td>".$this->td($arr)."</td>";  
+            $str .= "<td>".$arr."</td>";  
         }
         
-        $str .= "</tr>"; // 행종료 테그
+        // 행종료 테그
+        return $str."</tr>";
+    }
+
+    private function tdAttr($key)
+    {
+        $str = "";
+        //속성적용
+        if(isset($this->field_attr[$key])) {
+            foreach($this->field_attr[$key] as $attr => $style) {
+                $str .= " ".$attr."='".$style."'";
+            }
+        }
         return $str;
     }
 
     private function trAssoc($arr)
     {
         $str = "";
-        foreach ($arr as $key => $cell) {
+        foreach ($arr as $key => $text) {
             if (!in_array($key, $this->_field)) continue; // t선택한 필드만 출력허용
+
+            $str .= "<td".$this->tdAttr($key);
 
             // a링크 설정검사
             if (array_key_exists($key, $this->href)) {
-                $uri = $this->uri($key, $arr);  
+                $uri = $this->uri($key, $arr);
+                $str .= ">".$this->aLink($text,['href'=>$uri])."</td>";
             } else {
-                $uri = null; // 링크설정 없음        
+                // 링크설정 없음 
+                $str .= ">".$text."</td>";       
             }
-            
-            $str .= "<td";
-            //속성적용
-            if(isset($this->field_attr[$key])) {
-                foreach($this->field_attr[$key] as $attr => $style) {
-                    $str .= " ".$attr."='".$style."'";
-                }
-            }
-            $str .= ">".$this->td($cell, $uri)."</td>";                
+                            
         }
         return $str;
     }
@@ -323,15 +330,7 @@ class Table
         $str = "<tr>";
         foreach ($arr as $key => $value) {
             if (!in_array($key, $this->_field)) continue; // t선택한 필드만 출력허용
-
-            $str .= "<th";
-            //속성적용
-            if(isset($this->field_attr[$key])) {
-                foreach($this->field_attr[$key] as $attr => $style) {
-                    $str .= " ".$attr."='".$style."'";
-                }
-            }            
-            $str .= ">".$this->thTitle($key)."</th>";      
+            $str .= "<th".$this->tdAttr($key).">".$this->thTitle($key)."</th>";      
         }
         $str .= "</tr>";
         return $str;
