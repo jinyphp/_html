@@ -63,6 +63,7 @@ class Table
     }
 
     private $_field=[];
+    public $field_width=[];
     public function displayfield($arr=[])
     {
         if($this->isAssoArray($arr)) {
@@ -201,6 +202,7 @@ class Table
                 $uri = null; // 링크설정 없음        
             }
             
+            
             $str .= $this->td($cell, $uri);                
         }
         return $str;
@@ -251,15 +253,32 @@ class Table
         }
     }
 
-    // td: 열
-    private function td($value, $href=null)
+    private function aLink($text, $attr=[])
     {
+        $a = "<a";
+        foreach($attr as $key => $value) {
+            $a .= " ".$key."='".$value."'";
+        }
+        $a .= ">";
+        $a .= $text;
+        $a .= "</a>";
+        return $a;
+    }
+
+    /**
+     * td 열을 생성합니다.
+     */
+    private function td($text, $href=null)
+    {
+        $td = "<td>";
         if ($href) {
             // 링크연결이 있는 셀.
-            return "<td><a href='".$href."'>".$value."</a></td>";
+            $td .= $this->aLink($text,['href'=>$href]);
         } else {
-            return "<td>".$value."</td>"; 
-        }        
+            $td .= $text; 
+        }
+        
+        return $td."</td>";
     }
 
 
@@ -296,15 +315,25 @@ class Table
         $str = "<tr>";
         foreach ($arr as $key => $value) {
             if (!in_array($key, $this->_field)) continue; // t선택한 필드만 출력허용
-            if(isset($this->_theadTitle[$key])) {
-                $str .= "<th>".$this->_theadTitle[$key]."</th>";
-            } else {
-                $str .= "<th>".$key."</th>";
-            }            
+            $str .= "<th>".$this->thTitle($key)."</th>";         
         }
         $str .= "</tr>";
         return $str;
     }
+
+    // th 타일명
+    private function thTitle($key)
+    {
+        if(isset($this->_theadTitle[$key])) {
+            //사용자 지정 타이틀이 이는 경우
+            return $this->_theadTitle[$key];
+        } else {
+            // 키값을 타이틀 명으로 출력
+            return $key;
+        } 
+    }
+
+
 
     private $tfoot;
     public function setTfoot($str)
