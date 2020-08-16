@@ -102,13 +102,15 @@ class Table
         $body .= $this->tagStart($attr); // table 시작테크 생성
 
         // 테이블 Header를 설정합니다
+        // echo "header 생성";
         if(!$this->thead) {
             // print_r($this->_theadTitle);
             if (isset($this->data[0])) {
                 $fieldTitle = $this->data[0];
             } else {
                 $fieldTitle = $this->_theadTitle;
-            }               
+            }
+            // print_r($fieldTitle);       
             $this->buildThead( $fieldTitle ); // 첫번째줄, 키값만 전달.
         }
         $body .= $this->thead;

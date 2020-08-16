@@ -10,6 +10,22 @@
 
 namespace jiny\html;
 
+// 테그
+if (!function_exists("div")) {
+    function div($value) {
+        return "<div>".$value."</div>";
+    }
+}
+
+if (!function_exists("a")) {
+    function a($value, $href) {
+        return "<a href='$href'>".$value."</a>";
+    }
+}
+
+
+
+
 // csrf 해쉬키 생성
 if (!function_exists("csrf")) {
     function csrf($salt, $algo="sha1")

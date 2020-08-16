@@ -117,9 +117,12 @@ function javascript($code)
     return "<script>".$code."</script>";
 }
 
+/**
+ * 서브 네임스페이스
+ */
 namespace jiny\html;
 
-function ul($arr,$title=false)
+function ul($arr, $title=false)
 {
     $str = "<ul>";
     foreach ($arr as $key => $value) {
@@ -132,5 +135,7 @@ function ul($arr,$title=false)
     $str .= "</ul>";
     return $str;
 }
+
+
 
 require "Bootstrap.php";
