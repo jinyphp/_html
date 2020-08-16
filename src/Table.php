@@ -64,6 +64,8 @@ class Table
 
     private $_field=[];
     public $field_width=[];
+    public $field_attr=[];
+
     public function displayfield($arr=[])
     {
         if($this->isAssoArray($arr)) {
@@ -182,7 +184,7 @@ class Table
         } else 
         // 문자열일때, 한개의 셀만 존재합니다.
         if(\is_string($arr)) {
-            $str .= $this->td($arr);  
+            $str .= "<td>".$this->td($arr)."</td>";  
         }
         
         $str .= "</tr>"; // 행종료 테그
@@ -202,8 +204,14 @@ class Table
                 $uri = null; // 링크설정 없음        
             }
             
-            
-            $str .= $this->td($cell, $uri);                
+            $str .= "<td";
+            //속성적용
+            if(isset($this->field_attr[$key])) {
+                foreach($this->field_attr[$key] as $attr => $style) {
+                    $str .= " ".$attr."='".$style."'";
+                }
+            }
+            $str .= ">".$this->td($cell, $uri)."</td>";                
         }
         return $str;
     }
@@ -270,15 +278,15 @@ class Table
      */
     private function td($text, $href=null)
     {
-        $td = "<td>";
+  
         if ($href) {
             // 링크연결이 있는 셀.
-            $td .= $this->aLink($text,['href'=>$href]);
+            return $this->aLink($text,['href'=>$href]);
         } else {
-            $td .= $text; 
+            return $text; 
         }
         
-        return $td."</td>";
+        //return $td;
     }
 
 
@@ -315,7 +323,15 @@ class Table
         $str = "<tr>";
         foreach ($arr as $key => $value) {
             if (!in_array($key, $this->_field)) continue; // t선택한 필드만 출력허용
-            $str .= "<th>".$this->thTitle($key)."</th>";         
+
+            $str .= "<th";
+            //속성적용
+            if(isset($this->field_attr[$key])) {
+                foreach($this->field_attr[$key] as $attr => $style) {
+                    $str .= " ".$attr."='".$style."'";
+                }
+            }            
+            $str .= ">".$this->thTitle($key)."</th>";      
         }
         $str .= "</tr>";
         return $str;
