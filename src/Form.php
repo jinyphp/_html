@@ -10,7 +10,7 @@ class Form
     private $header;
     private $footer;
 
-    private $fields=[];
+    public $fields=[];
 
     /**
      * 싱글턴
@@ -87,26 +87,60 @@ class Form
     {
         if(isset($this->header)) $body = $this->header;
 
-        $body = $this->start();
+        $body = $this->start(); // 시작테크
 
-        foreach ($this->fields as $key => $value) {
-            $body .= $value;
+        // 요소를 하나씩 결합
+        foreach ($this->fields as $id => $item) {
+            if(is_array($item)) {
+                $code = "";
+                foreach($item as $tag => $str) {
+                    //if($tag == "group") continue;
+                    $code .= $str;
+                }
+            } else {
+                $code = $item;
+            }
+            $body .= "<div id='form-".$id."'>".$code."</div>";    
         }       
         
-        $body .= "</form>";
+        $body .= "</form>"; // 종료테그
 
         if(isset($this->footer)) $body .= $this->footer;
         return $body;
     }
 
-    public function setFields($args=[])
+ 
+    public function setFields($fields, $row=[])
     {
-        //print_r($args);
-        foreach ($args as $value) {
-            $this->input($value['type'], $value);
+        foreach ($fields as $id => $field) { 
+            // 요소 생성
+            //echo $id."<br>";
+            foreach($field as $tag => $el) {
+                $type = isset($el['type']) ? $el['type'] : $tag ;
+                if(method_exists($this, $type)) {
+                    if (isset($el['name']) && $type != "password") { // 페스워드는 제외함
+                        $v = $el['name'];
+                        if($row[$v]) $el['value'] = $row[$v];
+                    }
+                    $this->fields[$id][$tag] = $this->$type($el, $id);
+                } else {
+                    // 의미없는 메소드의 경우, 텍스트로 추가
+                    if(\is_array($el)) {
+                        foreach ( $el as $i => $value) {
+                            $this->fields[$id][$tag] .= $value;
+                        } 
+                    } else {
+                        $this->fields[$id][$tag] = $el;
+                    }
+                    
+                }
+            }
         }
         return $this;
     }
+
+
+  
 
     /*
     private function elBuild()
@@ -125,13 +159,21 @@ class Form
         return $this->build();
     }
 
-    public function label($title, $for=null)
+   
+    public function label($el, $id=null)
     {
-        if ($for) {
-            return "<label for='".$for."'>".$title."</label>";
-        } else {
-            return "<label>".$title."</label>";
-        }        
+        if($id) $el['for'] = $id;
+
+        $code = "<label";
+        foreach ($el as $key => $value) {
+            if($key == "title") {
+                $title = $value; 
+            } else {
+                $code .= " ".$key."='".$value."'";
+            }
+        }
+        $code .= ">".$title."</label>";
+        return $code;        
     }
 
     public function fieldset($el, $title=null)
@@ -143,6 +185,22 @@ class Form
         }       
     }
 
+    // 각 요소를 묽는 그룹테그
+    /*
+    public function group($el)
+    {
+        $code = "<div";
+        foreach ($el as $key => $value) {
+            $code .= " ".$key."='".$value."'";
+        }
+        $code .= ">{el}<div>";
+        return $code;
+    }
+    */
+
+
+
+    /*
     private function attribute($args)
     {
         $code = "";
@@ -162,98 +220,118 @@ class Form
         }
         return $code;
     }
+    */
 
-    /**
-     * input 요소생성
-     */
-    public function input($type, $args, $code=false) :string
+    public function input($el, $id) {
+        $code = "<input";
+        foreach ($el as $key => $value) {
+            if($key == "name") {
+                $code .= " ".$key."='data[".$value."]'"; // name은 배열처리
+            } else if(empty($value)) {
+                $code .= " ".$key; // 값이 없는 경우, 키값만 설정
+            } else {
+                $code .= " ".$key."='".$value."'";
+            }            
+        }
+        $code .= " id='".$id."'>";
+        return $code;
+    }
+
+   
+
+    public function hidden($el, $id=null) 
     {
-        // 라벨 생성
-        if (isset($args['label'])) {
-            if (!isset($args['id'])) $args['id'] = "label-".$args['name']; // 강제 id생성
-            $label = $this->label($args['label'], $args['id']);
-            unset($args['label']);
-        } else {
-            $label = "";
+        $el['type'] = "hidden";
+        
+        $code = "<input";
+        foreach ($el as $key => $value) {
+            $code .= " ".$key."='".$value."'";            
         }
 
-        // 요소 생성
-        $code = "<input ";
-        $args['type'] = $type;
-        $args = array_reverse($args);
-        $code .= $this->attribute($args); // 요소루프
-        $code .= "/>";
-
-        if (isset($args['name'])) {
-            $key = $args['name'];
-            $this->fields[$key] = "<div>".$label.$code."</div>";
+        if ($id) {
+            $code .= " id='".$id."'>";
         } else {
-            $this->fields []= "<div>".$label.$code."</div>";
+            $code .= ">";
+        }
+        
+        return $code;
+    }
+
+    public function password($el, $id=null) 
+    {
+        $el['type'] = "password";
+        return $this->input($el, $id);
+    }
+
+    public function button($el, $id=null) 
+    {
+        // print_r($el);
+        unset($el['type']);
+        if(isset($el['title'])) {
+            $title = $el['title'];
+            // unset($el['title']);
+        } else $title = "button";
+
+        $code = "<button";
+        foreach ($el as $key => $value) {
+            $code .= " ".$key."='".$value."'";            
         }
 
-        if ($code) {
-            return $label.$code;
+        if ($id) {
+            $code .= " id='".$id."'>".$title."11 </button>";
         } else {
-            return $this;
-        }        
+            $code .= ">".$title."11 </button>";
+        }
+        
+        return $code;
     }
 
-    public function hidden($args, $code=false) 
+
+    public function text($el, $id=null) 
     {
-        return $this->input("hidden", $args);
+        return $this->input($el, $id);
     }
 
-    public function text($args, $code=false) 
+    
+
+    public function submit($el, $id=null) 
     {
-        return $this->input("text", $args);
+  
     }
 
-    public function password($args, $code=false) 
+    public function reset($el, $id=null) 
     {
-        return $this->input("password", $args);
+      
     }
 
-    public function submit($args, $code=false) 
+    public function image($el, $id=null) 
     {
-        return $this->input("submit", $args);
+     
     }
 
-    public function reset($args, $code=false) 
+    
+
+    public function checkbox($el, $id=null)
     {
-        return $this->input("reset", $args);
+       
     }
 
-    public function image($args, $code=false) 
-    {
-        return $this->input("image", $args);
-    }
-
-    public function button($args, $code=false) 
-    {
-        return $this->input("button", $args);
-    }
-
-    public function checkbox($args, $code=false)
-    {
-        return $this->input("checkbox", $args);
-    }
-
-    public function radio($args, $code=false)
+    public function radio($el, $id=null)
     {
         $body = "";
         foreach ($args as $radio) {
-            $body .= $this->input("radio", $args, true);
+            //$body .= $this->input("radio", $args, true);
         }
         $this->fields []= $body;
         return $body;
     }
 
-    public function select($args, $code=false)
+    public function select($el, $id=null)
     {
 
     }
 
-    public function textarea($args, $code=false)
+    public function textarea($el, $id=null)
     {
 
     }
@@ -261,17 +339,17 @@ class Form
     /**
      * output 테그 : 계산결과 출력형식
      */
-    public function output($args, $code=false)
+    public function output($el, $id=null)
     {
 
     }
 
-    public function progress($args, $code=false)
+    public function progress($el, $id=null)
     {
 
     }
 
-    public function meter($args, $code=false)
+    public function meter($el, $id=null)
     {
 
     }
@@ -280,87 +358,87 @@ class Form
     /**
      * text 타입 html5 속성
      */
-    public function color($args, $code=false) 
+    public function color($el, $id=null) 
     {
-        return $this->input("color", $args);
+    
     }
 
-    public function date($args, $code=false) 
+    public function date($el, $id=null) 
     {
-        return $this->input("date", $args);
+      
     }
 
-    public function datetime($args, $code=false)
+    public function datetime($el, $id=null)
     {
-        return $this->input("datetime", $args);
+      
     }
 
-    public function datetimeLocal($args, $code=false)
+    public function datetimeLocal($el, $id=null)
     {
-        return $this->input("datetime-local", $args);
+      
     }
 
     /**
      * html5
      */
-    public function email($args, $code=false)
+    public function email($el, $id=null)
     {
-        return $this->input("email", $args);
+        return $this->input($el, $id);
     }
 
-    public function month($args, $code=false)
+    public function month($el, $id=null)
     {
-        return $this->input("month", $args);
+       
     }
 
     /**
      * html
      */
-    public function number($args, $code=false)
+    public function number($el, $id=null)
     {
-        return $this->input("number", $args);
+    
     }
 
     /**
      * html5
      */
-    public function range($args, $code=false)
+    public function range($el, $id=null)
     {
-        return $this->input("range", $args);
+      
     }
 
     /**
      * html5
      */
-    public function search($args, $code=false)
+    public function search($el, $id=null)
     {
-        return $this->input("search", $args);
+      
     }
 
     /**
      * html5
      */
-    public function tel($args, $code=false)
+    public function tel($el, $id=null)
     {
-        return $this->input("tel", $args);
+        
     }
 
-    public function time($args, $code=false)
+    public function time($el, $id=null)
     {
-        return $this->input("time", $args);
+       
     }
 
     /**
      * html5
      */
-    public function url($args, $code=false)
+    public function url($el, $id=null)
     {
-        return $this->input("url", $args);
+       
     }
 
-    public function week($args, $code=false)
+    public function week($el, $id=null)
     {
-        return $this->input("week", $args);
+     
     }
 
 
