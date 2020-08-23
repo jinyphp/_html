@@ -112,9 +112,9 @@ class Form
  
     public function setFields($fields, $row=[])
     {
+
         foreach ($fields as $id => $field) { 
             // 요소 생성
-            //echo $id."<br>";
             foreach($field as $tag => $el) {
                 $type = isset($el['type']) ? $el['type'] : $tag ;
                 if(method_exists($this, $type)) {
@@ -122,9 +122,12 @@ class Form
                         $v = $el['name'];
                         if($row[$v]) $el['value'] = $row[$v];
                     }
+
+                    // 생성된 요소 추가
                     $this->fields[$id][$tag] = $this->$type($el, $id);
                 } else {
                     // 의미없는 메소드의 경우, 텍스트로 추가
+                   
                     if(\is_array($el)) {
                         foreach ( $el as $i => $value) {
                             $this->fields[$id][$tag] .= $value;
@@ -133,25 +136,25 @@ class Form
                         $this->fields[$id][$tag] = $el;
                     }
                     
+                    // $this->setFieldString($el, $id);
+                    
                 }
             }
         }
         return $this;
     }
 
-
-  
-
-    /*
-    private function elBuild()
+    private function setFieldString($el, $id)
     {
-        $body .= "<ul>";
-        foreach ($this->fields as $key => $value) {
-            $body .= "<li>".$value."</li>";
+        if(\is_array($el)) {
+            foreach ( $el as $i => $value) {
+                $this->fields[$id][$tag] .= $value;
+            } 
+        } else {
+            $this->fields[$id][$tag] = $el;
         }
-        $body .= "</ul>";
+
     }
-    */
 
 
     public function __toString()
@@ -185,42 +188,6 @@ class Form
         }       
     }
 
-    // 각 요소를 묽는 그룹테그
-    /*
-    public function group($el)
-    {
-        $code = "<div";
-        foreach ($el as $key => $value) {
-            $code .= " ".$key."='".$value."'";
-        }
-        $code .= ">{el}<div>";
-        return $code;
-    }
-    */
-
-
-
-    /*
-    private function attribute($args)
-    {
-        $code = "";
-        $hidden = false;
-        foreach ($args as $key => $value) {
-            if($key == "type" && $value == "hidden") $hidden = true;
-            if (empty($value)) {
-                // 단일속성, 키값만 지정함
-                $code .= " ".$key; 
-            } else {
-                if(!$hidden && $key == "name") {
-                    $code .= " ".$key."='data[".$value."]'";
-                } else {
-                    $code .= " ".$key."='".$value."'";
-                }                
-            }            
-        }
-        return $code;
-    }
-    */
 
     public function input($el, $id) {
         $code = "<input";
@@ -278,9 +245,9 @@ class Form
         }
 
         if ($id) {
-            $code .= " id='".$id."'>".$title."11 </button>";
+            $code .= " id='".$id."'>".$title."</button>";
         } else {
-            $code .= ">".$title."11 </button>";
+            $code .= ">".$title."</button>";
         }
         
         return $code;
@@ -326,14 +293,29 @@ class Form
         return $body;
     }
 
-    public function select($el, $id=null)
-    {
+    use Forms\FormSelect; // select 요소처리
 
-    }
+    
 
     public function textarea($el, $id=null)
     {
-
+        $content = ""; // new 모드일때는, $content 변수가 생성되지 않기 때문에 초기화
+        $code = "<textarea";
+        foreach ($el as $key => $value) {
+            if($key == "type") {
+                continue; // textarea는 타입 속서이 없음.
+            } else if($key == "name") {
+                $code .= " ".$key."='data[".$value."]'"; // name은 배열처리
+            } else if(empty($value)) {
+                $code .= " ".$key; // 값이 없는 경우, 키값만 설정
+            } else if($key == "value") {
+                $content = $value;
+            } else {
+                $code .= " ".$key."='".$value."'";
+            }            
+        }
+        $code .= " id='".$id."'>";
+        return $code.$content."</textarea>";
     }
 
     /**
