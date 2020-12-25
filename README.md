@@ -7,3 +7,7 @@ HTML 코드를 빌더할 수 있는 클래스들을 제공합니다.
 ```
 composer require jiny/html
 ```
+
+## License
+jinyHtml is free software, released under the GNU General Public License
+(GPL) version 2.
