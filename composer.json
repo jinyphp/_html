@@ -1,35 +1,40 @@
 {
     "name": "jiny/html",
-    "description": "jinyPHP HTML",
-    "keywords": [
-        "jinyPHP",
-        "framwork"
-    ],
-    "homepage": "http://html5.jiny.dev",
+    "description": "jiny object html",
     "type": "library",
-    "license": "MIT",
+    "license": "GPL",
     "authors": [
         {
             "name": "hojinlee",
-            "email": "infohojin@gmail.com",
-            "homepage": "http://html5.jiny.dev"
+            "email": "infohojin@gmail.com"
         }
     ],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "require": {
-        "php": ">= 7.0",
-        "scssphp/scssphp": "^1.1"
+        "php": "^7.3|^8.0",
+        "livewire/livewire": "^2.7"
+
     },
     "autoload": {
         "psr-4": {
-            "Jiny\\Html\\": "src/",
-            "Jiny\\Admin\\": "admin/"
+            "Jiny\\Html\\":"src/"
         },
-        "files": [
+        "files" : [
             "src/Helpers/Helper.php",
-            "src/Helpers/Jiny.php",
-            "src/Helpers/Html.php"
-        ]        
-   
+            "src/Helpers/Factory.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jiny\\Html\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Jiny\\Html\\JinyHtmlServiceProvider"
+            ]
+        }
     }
+
 }
